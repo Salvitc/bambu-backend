@@ -58,11 +58,8 @@ func Create[T any](collection string, data T) (*mongo.InsertOneResult, error) {
 }
 
 /* Recibe un ID y actualiza la entidad con los datos seleccionados */
-func Update[T any](collection string, filter bson.M, data T) (*mongo.UpdateResult, error){
-	log.Println(filter)
-	log.Println(data)
-
-	result, err := GetClient().Collection(collection).UpdateOne(context.Background(), filter, bson.M{"$set": data})
+func Update[T any](collection string, filter primitive.ObjectID, data T) (*mongo.UpdateResult, error){
+	result, err := GetClient().Collection(collection).UpdateOne(context.Background(), bson.M{"_id": filter}, bson.M{"$set": data})
 	if(err != nil){
 		return nil, err
 	}
@@ -70,8 +67,8 @@ func Update[T any](collection string, filter bson.M, data T) (*mongo.UpdateResul
 	return result, nil
 }
 
-func Delete(collection string, filter bson.M) (*mongo.DeleteResult, error) {
-	result, err := GetClient().Collection(collection).DeleteOne(context.Background(), filter)
+func Delete(collection string, filter primitive.ObjectID) (*mongo.DeleteResult, error) {
+	result, err := GetClient().Collection(collection).DeleteOne(context.Background(), bson.M{"_id": filter})
 	if err != nil {
 		return nil, err
 	}

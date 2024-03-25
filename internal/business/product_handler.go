@@ -8,7 +8,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -20,6 +19,7 @@ func GetProduct(c *gin.Context){
     	c.IndentedJSON(http.StatusBadRequest, data.JsonError{Message: err.Error()})
 	}
 
+	/* obtiene el producto dado el ID */
 	result, err := db.Get[data.Product]("products", objectId)
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, data.JsonError{Message: err.Error()})
@@ -31,6 +31,7 @@ func GetProduct(c *gin.Context){
 
 //Devuelve todos las entidades de la colección productos
 func GetAllProducts(c *gin.Context){
+	/* Obtiene todos los productos */
 	result, err := db.GetAll[data.Product]("products")
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, data.JsonError{Message: err.Error()})
@@ -78,7 +79,7 @@ func UpdateProduct(c *gin.Context) {
 	}
 
 	/* Con el ID y los atributos a modificar, se actualiza la base de datos */
-	result, err := db.Update("products", bson.M{"_id": objectId}, producto)
+	result, err := db.Update("products", objectId, producto)
 	if (err != nil) {
 		c.IndentedJSON(http.StatusInternalServerError, data.JsonError{Message: err.Error()})
 		return
@@ -94,7 +95,7 @@ func DeleteProduct(c *gin.Context) {
     	c.IndentedJSON(http.StatusBadRequest, data.JsonError{Message: err.Error()})
 	}
 
-	result, err := db.Delete("products", bson.M{"_id": objectId})
+	result, err := db.Delete("products", objectId)
 	if(err != nil){
 		c.IndentedJSON(http.StatusInternalServerError, data.JsonError{Message: err.Error()})
 	}
