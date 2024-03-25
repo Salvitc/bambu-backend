@@ -26,10 +26,10 @@ func inicializarRutas(router *gin.Engine){
 	/* CRUD PEDIDOS */
 	router.GET("/order", controllers.GetAllOrders)
 	router.GET("/order/:userid", controllers.GetAllUserOrders)
-	router.GET("/order/:orderid", controllers.GetOrder)
+	router.GET("/order/:userid/:orderid", controllers.GetOrder)
 	router.POST("/order", controllers.CreateOrder)
-	router.PUT("/order/:orderid", controllers.UpdateOrder)
-	router.DELETE("/order/:orderid", controllers.DeleteOrder)
+	router.PUT("/order/:userid/:orderid", controllers.UpdateOrder)
+	router.DELETE("/order/:userid/:orderid", controllers.DeleteOrder)
 
 	/* CRUD USUARIOS */
 	router.GET("/user", controllers.GetAllUsers)

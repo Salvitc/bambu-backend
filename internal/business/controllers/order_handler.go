@@ -20,8 +20,14 @@ func GetOrder(c *gin.Context){
 		c.IndentedJSON(http.StatusBadRequest, data.JsonError{Message: err.Error()})
 	}
 
+	// El ID del usuario debe ser de tipo ObjectID
+	userid, err := primitive.ObjectIDFromHex(c.Param("userid"))
+	if err != nil{
+		c.IndentedJSON(http.StatusBadRequest, data.JsonError{Message: err.Error()})
+	}
+
 	/* obtiene el Pedido su id y que pertenezcan al usuario */
-	result, err := db.Get[data.Order]("orders", bson.M{"_id": orderId})
+	result, err := db.Get[data.Order]("orders", bson.M{"_id": orderId, "user_id": userid})
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, data.JsonError{Message: err.Error()})
 		return
@@ -85,9 +91,15 @@ func CreateOrder(c *gin.Context){
 /* Actualizar Pedido en base de datos */
 func UpdateOrder(c *gin.Context) {
 	// El ID debe ser de tipo ObjectID
-	objectId, err := primitive.ObjectIDFromHex(c.Param("orderid"))
+	orderId, err := primitive.ObjectIDFromHex(c.Param("orderid"))
 	if err != nil{
     	c.IndentedJSON(http.StatusBadRequest, data.JsonError{Message: err.Error()})
+	}
+
+	// El ID debe ser de tipo ObjectID
+	userId, err := primitive.ObjectIDFromHex(c.Param("userid"))
+	if err != nil{
+		c.IndentedJSON(http.StatusBadRequest, data.JsonError{Message: err.Error()})
 	}
 
 	/* Se decodifica el body de la petición en un tipo "Order" */
@@ -98,7 +110,7 @@ func UpdateOrder(c *gin.Context) {
 	}
 
 	/* Con el ID y los atributos a modificar, se actualiza la base de datos */
-	result, err := db.Update("orders", bson.M{"_id": objectId}, pedido)
+	result, err := db.Update("orders", bson.M{"_id": orderId, "user_id": userId}, pedido)
 	if (err != nil) {
 		c.IndentedJSON(http.StatusInternalServerError, data.JsonError{Message: err.Error()})
 		return
@@ -109,12 +121,18 @@ func UpdateOrder(c *gin.Context) {
 
 func DeleteOrder(c *gin.Context) {
 	// El ID debe ser de tipo ObjectID
-	objectId, err := primitive.ObjectIDFromHex(c.Param("orderid"))
+	orderId, err := primitive.ObjectIDFromHex(c.Param("orderid"))
 	if err != nil{
     	c.IndentedJSON(http.StatusBadRequest, data.JsonError{Message: err.Error()})
 	}
 
-	result, err := db.Delete("orders", bson.M{"_id": objectId})
+	// El ID debe ser de tipo ObjectID
+	userId, err := primitive.ObjectIDFromHex(c.Param("userid"))
+	if err != nil{
+    	c.IndentedJSON(http.StatusBadRequest, data.JsonError{Message: err.Error()})
+	}
+
+	result, err := db.Delete("orders", bson.M{"_id": orderId, "user_id": userId})
 	if(err != nil){
 		c.IndentedJSON(http.StatusInternalServerError, data.JsonError{Message: err.Error()})
 	}
