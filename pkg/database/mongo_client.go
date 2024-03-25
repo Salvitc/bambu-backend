@@ -23,7 +23,7 @@ var lock = &sync.Mutex{}
 /* variable para hacer el cliente singleton y no poder crear más de una instancia */
 var instance *mongo.Database
 
-func Connect() (*mongo.Database, error) {
+func connect() (*mongo.Database, error) {
 
 	if instance == nil {
 		/* Bloqueamos el cerrojo y nos aseguramos que se libera al salir de la función */
@@ -43,15 +43,17 @@ func Connect() (*mongo.Database, error) {
 
 		/* Creamos la url de conexión y la seteamos a cliente*/
 		uri := fmt.Sprintf("mongodb://%s:%s/%s", host, port, db)
-		log.Println(uri)
+		log.Printf("Conectado a: %s", uri)
+
 		clientOpt := options.Client().ApplyURI(uri)
 
-		cliente, err := mongo.Connect(context.Background(), clientOpt); if err != nil {
+		cliente, err := mongo.Connect(context.Background(), clientOpt)
+		if err != nil {
 			return nil, err
 		}
 
 		/* Probamos la conectividad del cliente */
-		err = cliente.Ping(context.Background(), nil); if err != nil {
+		if err := cliente.Ping(context.Background(), nil); err != nil {
 			return nil, err
 		}
 

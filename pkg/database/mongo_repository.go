@@ -11,52 +11,72 @@ import (
 	"log"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-/* Recibe uno o más campos de un elemento y lo busca en base de datos */
-func Get[T any](collection string, filter T) (*mongo.SingleResult){
-	mongoDb, err := Connect(); if err != nil {
+/* Encapsula la obtención y gestión de errores del cliente mongo */
+func GetClient() (*mongo.Database) {
+	mongoDb, err := connect(); if err != nil {
 		log.Fatalf("Error connecting to database: %v", err)
 	}
-	
-	return mongoDb.Collection(collection).FindOne(context.Background(), filter)
+
+	return mongoDb;
+}
+/****************************************************************/
+
+/* Recibe uno o más campos de un elemento y lo busca en base de datos */
+func Get[T any](collection string, filter primitive.ObjectID) (*T, error){
+	result := GetClient().Collection(collection).FindOne(context.Background(), bson.M{"_id": filter})
+
+	var data *T
+	if err := result.Decode(&data); err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }
 
 /* Dada una colección, obtiene todos los elementos existentes */
-func GetAll[T any](collection string) ([]T, error){
-	mongoDb, err := Connect(); if err != nil {
-		log.Fatalf("Error connecting to database: %v", err)
-	}
-
+func GetAll[T any](collection string) ([] *T, error){
 	/* Obtiene un objeto mongo Cursor con la información de las entidades */
-	cursor, err := mongoDb.Collection(collection).Find(context.Background(), bson.D{{}}); if err != nil {
+	cursor, err:= GetClient().Collection(collection).Find(context.Background(), bson.M{})
+	if err != nil {
 		return nil, err
 	}
 
 	/* Construye el array de entidades a través del cursor */
-	var data []T
+	var data []*T
 	err = cursor.All(context.Background(), &data)
 
 	return data, err
 }
 
-/* Recibe un ID y actualiza la entidad con los datos seleccionados */
-func Update[T any](collection string, filter bson.D, data T) (*mongo.UpdateResult, error){
-	mongoDb, err := Connect(); if err != nil {
-		log.Fatalf("Error connecting to database: %v", err)
-	}
-
-	return mongoDb.Collection(collection).UpdateByID(context.Background(), filter, data)
-}
-
 /* Recibe el nombre de una colección, un elemento a introducir y efectua la creación de la entidad */
 func Create[T any](collection string, data T) (*mongo.InsertOneResult, error) {
-	mongoDb, err := Connect(); if err != nil {
-		log.Fatalf("Error connecting to database: %v", err)
+	return GetClient().Collection(collection).InsertOne(context.Background(), data)
+}
+
+/* Recibe un ID y actualiza la entidad con los datos seleccionados */
+func Update[T any](collection string, filter bson.M, data T) (*mongo.UpdateResult, error){
+	log.Println(filter)
+	log.Println(data)
+
+	result, err := GetClient().Collection(collection).UpdateOne(context.Background(), filter, bson.M{"$set": data})
+	if(err != nil){
+		return nil, err
 	}
 
-	return mongoDb.Collection(collection).InsertOne(context.Background(), data)
+	return result, nil
+}
+
+func Delete(collection string, filter bson.M) (*mongo.DeleteResult, error) {
+	result, err := GetClient().Collection(collection).DeleteOne(context.Background(), filter)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 

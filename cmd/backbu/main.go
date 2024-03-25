@@ -2,15 +2,17 @@ package main
 
 import (
 	"backbu/internal/api"
-	"log"
+	"backbu/pkg/database"
+
 	"github.com/joho/godotenv"
 )
 
 func main() {
-	if err := godotenv.Load("../../.env"); err != nil {
-        log.Fatalf("Error loading .env file: %v", err)
-    }
+	//Carga las variables de entorno en desarrollo
+	godotenv.Load(".env")
+
+	db.GetClient()
 
 	router := api.Router()
-	go router.Run("localhost:8080")
+	router.Run("localhost:8080")
 }
