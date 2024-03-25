@@ -11,7 +11,6 @@ import (
 	"log"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -26,8 +25,8 @@ func GetClient() (*mongo.Database) {
 /****************************************************************/
 
 /* Recibe uno o más campos de un elemento y lo busca en base de datos */
-func Get[T any](collection string, filter primitive.ObjectID) (*T, error){
-	result := GetClient().Collection(collection).FindOne(context.Background(), bson.M{"_id": filter})
+func Get[T any](collection string, filter bson.M) (*T, error){
+	result := GetClient().Collection(collection).FindOne(context.Background(), filter)
 
 	var data *T
 	if err := result.Decode(&data); err != nil {
@@ -58,8 +57,8 @@ func Create[T any](collection string, data T) (*mongo.InsertOneResult, error) {
 }
 
 /* Recibe un ID y actualiza la entidad con los datos seleccionados */
-func Update[T any](collection string, filter primitive.ObjectID, data T) (*mongo.UpdateResult, error){
-	result, err := GetClient().Collection(collection).UpdateOne(context.Background(), bson.M{"_id": filter}, bson.M{"$set": data})
+func Update[T any](collection string, filter bson.M, data T) (*mongo.UpdateResult, error){
+	result, err := GetClient().Collection(collection).UpdateOne(context.Background(), filter, bson.M{"$set": data})
 	if(err != nil){
 		return nil, err
 	}
@@ -67,8 +66,8 @@ func Update[T any](collection string, filter primitive.ObjectID, data T) (*mongo
 	return result, nil
 }
 
-func Delete(collection string, filter primitive.ObjectID) (*mongo.DeleteResult, error) {
-	result, err := GetClient().Collection(collection).DeleteOne(context.Background(), bson.M{"_id": filter})
+func Delete(collection string, filter bson.M) (*mongo.DeleteResult, error) {
+	result, err := GetClient().Collection(collection).DeleteOne(context.Background(), filter)
 	if err != nil {
 		return nil, err
 	}
