@@ -2,6 +2,7 @@ package api
 
 import (
 	"backbu/internal/business/controllers"
+	"backbu/internal/business/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,12 +25,12 @@ func inicializarRutas(router *gin.Engine){
 	router.DELETE("/product/:id", controllers.DeleteProduct)
 
 	/* CRUD PEDIDOS */
-	router.GET("/order", controllers.GetAllOrders)
-	router.GET("/order/:userid", controllers.GetAllUserOrders)
-	router.GET("/order/:userid/:orderid", controllers.GetOrder)
-	router.POST("/order", controllers.CreateOrder)
-	router.PUT("/order/:userid/:orderid", controllers.UpdateOrder)
-	router.DELETE("/order/:userid/:orderid", controllers.DeleteOrder)
+	router.GET("/order",middleware.AdminOperation, controllers.GetAllOrders)
+	router.GET("/order/:userid", middleware.UserOperation, controllers.GetAllUserOrders)
+	router.GET("/order/:userid/:orderid", middleware.UserOperation, controllers.GetOrder)
+	router.POST("/order", middleware.UserOperation, controllers.CreateOrder)
+	router.PUT("/order/:userid/:orderid", middleware.UserOperation, controllers.UpdateOrder)
+	router.DELETE("/order/:userid/:orderid", middleware.AdminOperation, controllers.DeleteOrder)
 
 	/* CRUD USUARIOS */
 	router.GET("/user", controllers.GetAllUsers)

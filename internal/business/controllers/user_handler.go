@@ -84,7 +84,7 @@ func Login(c *gin.Context){
 
 	/* Generamos token para el usuario */
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": usuario.ID.String(),
+		"sub": usuario.ID.Hex(),
 		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
 	})
 

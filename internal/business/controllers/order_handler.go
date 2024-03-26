@@ -3,6 +3,7 @@ package controllers
 import (
 	"backbu/internal/data"
 	"backbu/pkg/database"
+	"log"
 
 	"encoding/json"
 	"net/http"
@@ -72,6 +73,7 @@ func CreateOrder(c *gin.Context){
 
 	/* Intenta decodificar el Body y rellenar el objeto Pedido */
 	err := json.NewDecoder(c.Request.Body).Decode(&pedido)
+	log.Println(pedido)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, data.JsonError{Message: err.Error()})
 		return

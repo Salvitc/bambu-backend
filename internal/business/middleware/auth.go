@@ -4,6 +4,7 @@ import (
 	"backbu/internal/data"
 	"backbu/pkg/database"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -28,7 +29,7 @@ func UserOperation(c *gin.Context){
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
-
+	
 	c.Next()
 }
 
@@ -42,6 +43,7 @@ func checkAuth(c *gin.Context, roles []string) bool{
 
 	/* Comprobamos que la cookie contenga la autorización */
 	tokenString, err := c.Cookie("Authorization")
+	log.Println(c.Cookie("Authorization"))
 	if err != nil {
 		return false
 	}
@@ -68,8 +70,9 @@ func checkAuth(c *gin.Context, roles []string) bool{
 
 		/* Comprobamos que el ID es un ObjectID */
 		objectId, err := primitive.ObjectIDFromHex(claims["sub"].(string))
-		if err != nil{
-			c.IndentedJSON(http.StatusBadRequest, data.JsonError{Message: err.Error()})
+		if err != nil {
+			c.IndentedJSON(http.StatusBadRequest, data.JsonError{Message: "Cookie bad formatted. Can not recognize ID"})
+			return false
 		}
 
 		/* Cmprobamos si el usuario del token coincide con alguno en BD */
