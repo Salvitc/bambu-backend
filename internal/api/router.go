@@ -20,12 +20,12 @@ func inicializarRutas(router *gin.Engine){
 	/* CRUD PRODUCTOS */
 	router.GET("/product", controllers.GetAllProducts)
 	router.GET("/product/:id", controllers.GetProduct)
-	router.POST("/product", controllers.CreateProduct)
-	router.PUT("/product/:id", controllers.UpdateProduct)
-	router.DELETE("/product/:id", controllers.DeleteProduct)
+	router.POST("/product", middleware.AdminOperation, controllers.CreateProduct)
+	router.PUT("/product/:id", middleware.AdminOperation, controllers.UpdateProduct)
+	router.DELETE("/product/:id", middleware.AdminOperation, controllers.DeleteProduct)
 
 	/* CRUD PEDIDOS */
-	router.GET("/order",middleware.AdminOperation, controllers.GetAllOrders)
+	router.GET("/order", middleware.AdminOperation, controllers.GetAllOrders)
 	router.GET("/order/:userid", middleware.UserOperation, controllers.GetAllUserOrders)
 	router.GET("/order/:userid/:orderid", middleware.UserOperation, controllers.GetOrder)
 	router.POST("/order", middleware.UserOperation, controllers.CreateOrder)
@@ -33,11 +33,11 @@ func inicializarRutas(router *gin.Engine){
 	router.DELETE("/order/:userid/:orderid", middleware.AdminOperation, controllers.DeleteOrder)
 
 	/* CRUD USUARIOS */
-	router.GET("/user", controllers.GetAllUsers)
+	router.GET("/user", middleware.AdminOperation, controllers.GetAllUsers)
 	router.GET("/user/:id", controllers.GetUser)
-	router.POST("/user", controllers.CreateUser)
-	router.PUT("/user/:id", controllers.UpdateUser)
-	router.DELETE("/user/:id", controllers.DeleteUser)
+	router.POST("/user", middleware.AdminOperation, controllers.CreateUser)
+	router.PUT("/user/:id", middleware.UserOperation, controllers.UpdateUser)
+	router.DELETE("/user/:id", middleware.UserOperation, controllers.DeleteUser)
 
 	/* AUTH USUARIOS */
 	router.POST("/login", controllers.Login)
