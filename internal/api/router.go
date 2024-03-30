@@ -35,11 +35,13 @@ func inicializarRutas(router *gin.Engine){
 	/* CRUD USUARIOS */
 	router.GET("/user", middleware.AdminOperation, controllers.GetAllUsers)
 	router.GET("/user/:id", controllers.GetUser)
-	router.POST("/user", middleware.AdminOperation, controllers.CreateUser)
+	router.POST("/user", controllers.CreateUser)
 	router.PUT("/user/:id", middleware.UserOperation, controllers.UpdateUser)
 	router.DELETE("/user/:id", middleware.UserOperation, controllers.DeleteUser)
 
 	/* AUTH USUARIOS */
 	router.POST("/login", controllers.Login)
 	router.POST("/register", controllers.Register)
+
+	router.GET("/user/role", middleware.GetUserRole)
 }

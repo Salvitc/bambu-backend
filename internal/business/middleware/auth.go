@@ -93,3 +93,67 @@ func checkAuth(c *gin.Context, roles []string) bool{
 	}
 	return false
 }
+
+func GetUserRole(c *gin.Context) {
+	/* Obtenemos la secret key de las variables de entorno */
+	secret, err := env.MustGet("SECRET_KEY"); if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	/* Comprobamos que la cookie contenga la autorización */
+	tokenString, err := c.Cookie("Authorization")
+	if err != nil {
+		c.SetSameSite(http.SameSiteLaxMode)
+		c.SetCookie("Authorization", "", 3600 * 24 * 30, "", "", false, true)
+		c.Status(http.StatusUnauthorized)
+		return 
+	}
+
+ 	/* 
+	 * Decodificamos el token, Para validar que el token es correcto, se implementa una
+	 * lambda que lo hace, para más info consultar la documentación de la biblioteca
+	 * github.com/golang-jwt/jwt
+	 */
+ 	token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+   
+		return []byte(secret), nil
+   	})
+
+	/* Si el token es válido y se puede obtener el mapa de información, continuamos */
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		// Comprobamos la fecha de expiración
+		if float64(time.Now().Unix()) > claims["exp"].(float64) {
+			c.SetSameSite(http.SameSiteLaxMode)
+			c.SetCookie("Authorization", "", 3600 * 24 * 30, "", "", false, true)
+			c.Status(http.StatusUnauthorized)
+			return
+		}
+
+		/* Comprobamos que el ID es un ObjectID */
+		objectId, err := primitive.ObjectIDFromHex(claims["sub"].(string))
+		if err != nil {
+			c.SetSameSite(http.SameSiteLaxMode)
+			c.SetCookie("Authorization", "", 3600 * 24 * 30, "", "", false, true)
+			c.Status(http.StatusUnauthorized)
+			return 
+		}
+
+		/* Cmprobamos si el usuario del token coincide con alguno en BD */
+		usuario, err := db.Get[data.User]("users", bson.M{"_id": objectId})
+		if err != nil {
+			c.SetSameSite(http.SameSiteLaxMode)
+			c.SetCookie("Authorization", "", 3600 * 24 * 30, "", "", false, true)
+			c.Status(http.StatusUnauthorized)
+			return
+		}
+		
+		/* 
+		 * Finalmente, devolvemos el rol del usuario
+		 */
+		c.IndentedJSON(http.StatusOK, usuario.Role.Code)
+	}
+}
