@@ -3,13 +3,23 @@ package api
 import (
 	"backbu/internal/business/controllers"
 	"backbu/internal/business/middleware"
-
+  "time"
 	"github.com/gin-gonic/gin"
+  "github.com/gin-contrib/cors"
 )
 
 /* Devuelve un objeto router con los endpoints de la api inicializados */
 func Router() *gin.Engine {
 	var router = gin.Default()
+
+  router.Use(cors.New(cors.Config{
+    AllowOrigins: []string{"http://localhost:5173"},
+    AllowMethods: []string{"GET", "POST", "PUT", "DELETE"},
+    AllowHeaders: []string{"Origin", "Content-Type"},
+    ExposeHeaders: []string{"Content-Length"},
+    AllowCredentials: true,
+    MaxAge: 12 * time.Hour,
+  }))
 
 	inicializarRutas(router)
 
