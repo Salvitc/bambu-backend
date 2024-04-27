@@ -12,6 +12,7 @@ type Product struct {
 	Price       float32            `json:"price" bson:"price,omitempty"`
 	Category    string             `json:"category" bson:"category,omitempty"`
 	InStock     bool               `json:"in_stock" bson:"in_stock,omitempty"`
+  Amount      uint8              `json:"amount" bson:"amount,omitempty"`
 	Images      []string           `json:"images" bson:"images,omitempty"`
 }
 

@@ -103,7 +103,7 @@ func GetUserRole(c *gin.Context) {
 
 	/* Comprobamos que la cookie contenga la autorización */
 	tokenString, err := c.Cookie("Authorization")
-	if err != nil {
+	if err != nil || tokenString == ""{
 		c.SetSameSite(http.SameSiteLaxMode)
 		c.SetCookie("Authorization", "", 3600 * 24 * 30, "", "", false, true)
 		c.Status(http.StatusUnauthorized)
