@@ -41,6 +41,7 @@ func inicializarRutas(router *gin.Engine){
 	router.POST("/order", middleware.UserOperation, controllers.CreateOrder)
 	router.PUT("/order/:userid/:orderid", middleware.UserOperation, controllers.UpdateOrder)
 	router.DELETE("/order/:userid/:orderid", middleware.AdminOperation, controllers.DeleteOrder)
+  router.GET("/order/:startdate/:enddate", middleware.AdminOperation, controllers.GetOrdersByDateRange)
 
 	/* CRUD USUARIOS */
 	router.GET("/user", middleware.AdminOperation, controllers.GetAllUsers)

@@ -51,6 +51,21 @@ func GetAll[T any](collection string) ([] *T, error){
 	return data, err
 }
 
+func GetBy[T any](collection string, filter bson.M) ([] *T, error){
+  /* Obtiene un objeto mongo Cursor con la información de las entidades */
+  cursor, err:= GetClient().Collection(collection).Find(context.Background(), filter)
+  if err != nil {
+  
+		return nil, err
+	}
+
+	/* Construye el array de entidades a través del cursor */
+	var data []*T
+	err = cursor.All(context.Background(), &data)
+
+	return data, err
+}
+
 /* Recibe el nombre de una colección, un elemento a introducir y efectua la creación de la entidad */
 func Create[T any](collection string, data T) (*mongo.InsertOneResult, error) {
 	return GetClient().Collection(collection).InsertOne(context.Background(), data)

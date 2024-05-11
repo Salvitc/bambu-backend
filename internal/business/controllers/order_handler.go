@@ -40,13 +40,45 @@ func GetOrder(c *gin.Context){
 //Devuelve todos las entidades de la colección Pedidos
 func GetAllOrders(c *gin.Context){
 	/* Obtiene todos los Pedidos */
-	result, err := db.GetAll[data.Order]("orders")
+	var extendedOrders []data.ExtendedOrder
+
+  result, err := db.GetAll[data.Order]("orders")
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, data.JsonError{Message: err.Error()})
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, result);
+  /* Construye los Pedidos extendidos con los datos de los Usuarios y Productos asociados */
+  extendedOrders, err = buildExtendedOrders(result)
+  if err != nil {
+    c.IndentedJSON(http.StatusNotFound, data.JsonError{Message: err.Error()})
+    return
+  }
+
+	c.IndentedJSON(http.StatusOK, extendedOrders);
+}
+
+//Devuelve los Pedidos que coincidan con el rango de fechas pasado como parámetro de la URL
+func GetOrdersByDateRange(c *gin.Context){
+  /* Obtiene los parámetros de la URL */
+  startDate := c.Param("startdate")
+  endDate := c.Param("enddate")
+
+  /* Obtiene todos los Pedidos que estén en el rango de fechas */
+  result, err := db.GetBy[data.Order]("orders", bson.M{"date": bson.M{"$gte": startDate, "$lte": endDate}})
+  if err != nil {
+    c.IndentedJSON(http.StatusNotFound, data.JsonError{Message: err.Error()})
+    return
+  }
+
+  /* Construye los Pedidos extendidos con los datos de los Usuarios y Productos asociados */
+  extendedOrders, err := buildExtendedOrders(result)
+  if err != nil {
+    c.IndentedJSON(http.StatusNotFound, data.JsonError{Message: err.Error()})
+    return
+  }
+
+  c.IndentedJSON(http.StatusOK, extendedOrders)	
 }
 
 //Devuelve los Pedidos que coincidan con el ID pasado como parámetro de la URL
@@ -140,4 +172,34 @@ func DeleteOrder(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusAccepted, result)
+}
+
+func buildExtendedOrders(orders []*data.Order) ([]data.ExtendedOrder, error) {
+  var extendedOrders []data.ExtendedOrder
+
+  /* Itera sobre los Pedidos para obtener los datos de los Usuarios y Productos asociados */
+  for _, order := range orders{
+    user, err := db.Get[data.User]("users", bson.M{"_id": order.UserID})
+    if err != nil {
+      return nil, err
+    }
+
+    var products []data.Product
+    for _, product := range order.Products {
+      p, err := db.Get[data.Product]("products", bson.M{"_id": product})
+      if err != nil {
+        return nil, err
+      }
+      products = append(products, *p)
+    }
+    
+    extendedOrders = append(extendedOrders, data.ExtendedOrder{
+      ID: order.ID,
+      OrderID: order.OrderID,
+      User: *user,
+      Products: products,
+      Amount: order.Amount,
+    })
+  } 
+  return extendedOrders, nil
 }

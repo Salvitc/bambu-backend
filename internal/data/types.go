@@ -33,6 +33,8 @@ type Role struct {
 
 type Order struct {
 	ID       primitive.ObjectID   `json:"_id,omitempty" bson:"_id,omitempty"`
+  OrderID  int32                `json:"order_id" bson:"order_id"`
+  Date     primitive.DateTime   `json:"date" bson:"date"`
 	UserID   primitive.ObjectID   `json:"user_id" bson:"user_id"`
 	Products []primitive.ObjectID `json:"products" bson:"products"`
 	Amount   float32              `json:"amount" bson:"amount"`
@@ -47,6 +49,15 @@ type Review struct {
 }
 
 /* UTILES */
+type ExtendedOrder struct {
+  ID       primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+  OrderID  int32              `json:"order_id" bson:"order_id"`
+  Date     primitive.DateTime `json:"date" bson:"date"`
+  User     User               `json:"user" bson:"user"`
+  Products []Product          `json:"products" bson:"products"`
+  Amount   float32            `json:"amount" bson:"amount"`
+}
+
 type JsonError struct {
 	Message string `json:"error"`
 }
