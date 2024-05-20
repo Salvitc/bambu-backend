@@ -102,6 +102,58 @@ func Login(c *gin.Context){
  	c.JSON(http.StatusOK, gin.H{})
 }
 
+func Logout(c *gin.Context){
+  /* Borramos la cookie de autenticación */
+  c.SetCookie("Authorization", "", 0, "", "", false, true)
+  c.JSON(http.StatusOK, gin.H{})
+}
+
+func GetUserFromToken(c *gin.Context){
+  /* Obtenemos la secret key de las variables de entorno */
+  secret, err := env.MustGet("SECRET_KEY"); if err != nil {
+    c.AbortWithStatus(http.StatusInternalServerError)
+    return
+  }
+
+  /* Obtenemos el token de la cookie */
+  tokenString, err := c.Cookie("Authorization")
+  if err != nil {
+    c.AbortWithStatus(http.StatusUnauthorized)
+    return
+  }
+
+  /* Parseamos el token */
+  token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+    return []byte(secret), nil
+  })
+  if err != nil {
+    c.AbortWithStatus(http.StatusUnauthorized)
+    return
+  }
+
+  /* Obtenemos el ID del usuario */
+  claims, ok := token.Claims.(jwt.MapClaims)
+  if !ok {
+    c.AbortWithStatus(http.StatusUnauthorized)
+    return
+  }
+
+	// El ID debe ser de tipo ObjectID
+	objectId, err := primitive.ObjectIDFromHex(claims["sub"].(string))
+	if err != nil{
+    	c.IndentedJSON(http.StatusBadRequest, data.JsonError{Message: err.Error()})
+	}
+
+  /* Obtenemos el usuario dado el ID */
+  usuario, err := db.Get[data.User]("users", bson.M{"_id": objectId})
+  if err != nil {
+    c.IndentedJSON(http.StatusNotFound, data.JsonError{Message: err.Error()})
+    return
+  }
+
+  c.IndentedJSON(http.StatusOK, usuario)
+}
+
 //OPERACIONES DE ADMINISTRACIÓN DE USUARIOS
 //Devuelve el Usuario que coincida con el ID pasado como parámetro de la URL
 func GetUser(c *gin.Context){
