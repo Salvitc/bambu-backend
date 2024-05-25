@@ -4,7 +4,6 @@ import (
 	"backbu/internal/data"
 	"backbu/pkg/database"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -43,7 +42,6 @@ func checkAuth(c *gin.Context, roles []string) bool{
 
 	/* Comprobamos que la cookie contenga la autorización */
 	tokenString, err := c.Cookie("Authorization")
-	log.Println(c.Cookie("Authorization"))
 	if err != nil {
 		return false
 	}

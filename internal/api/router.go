@@ -49,11 +49,13 @@ func inicializarRutas(router *gin.Engine){
 	router.POST("/user", controllers.CreateUser)
 	router.PUT("/user/:id", middleware.UserOperation, controllers.UpdateUser)
 	router.DELETE("/user/:id", middleware.UserOperation, controllers.DeleteUser)
+  router.GET("/user/token", middleware.UserOperation, controllers.GetUserFromToken)
+	router.GET("/user/role", middleware.GetUserRole)
+  router.PUT("/user/:id/wishlist", middleware.UserOperation, controllers.UpdateWishlist)
+  router.PUT("/user/:id/cart", middleware.UserOperation, controllers.UpdateCart)
 
 	/* AUTH USUARIOS */
 	router.POST("/login", controllers.Login)
 	router.POST("/register", controllers.Register)
   router.POST("/logout", controllers.Logout)
-  router.GET("/user/token", middleware.UserOperation, controllers.GetUserFromToken)
-	router.GET("/user/role", middleware.GetUserRole)
 }

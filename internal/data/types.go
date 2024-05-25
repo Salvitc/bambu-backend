@@ -17,14 +17,23 @@ type Product struct {
 }
 
 type User struct {
-	ID       primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	Username string             `json:"username" bson:"username,omitempty"`
-	Password string             `json:"password" bson:"password,omitempty"`
-	Email    string             `json:"email" bson:"email,omitempty"`
-	Name     string             `json:"name" bson:"name,omitempty"`
-	Lastname string             `json:"lastname" bson:"lastname,omitempty"`
-	Address  string             `json:"address" bson:"address,omitempty"`
-	Role     Role               `json:"role" bson:"role,omitempty"`
+	ID       primitive.ObjectID   `json:"_id,omitempty" bson:"_id,omitempty"`
+	Username string               `json:"username" bson:"username,omitempty"`
+	Password string               `json:"password" bson:"password,omitempty"`
+	Email    string               `json:"email" bson:"email,omitempty"`
+  Phone    string               `json:"phone" bson:"phone,omitempty"`
+	Name     string               `json:"name" bson:"name,omitempty"`
+	Lastname string               `json:"lastname" bson:"lastname,omitempty"`
+	Address  string               `json:"address" bson:"address,omitempty"`
+  Role     Role                 `json:"role" bson:"role,omitempty"`
+  Cart     []CartItem           `json:"cart" bson:"cart,omitempty"`
+  Wishlist []primitive.ObjectID `json:"wishlist" bson:"wishlist,omitempty"`
+}
+
+type CartItem struct {
+  ProductID primitive.ObjectID `json:"product_id" bson:"product_id"`
+  Price     float32            `json:"price" bson:"price"` 
+  Amount    uint8              `json:"amount" bson:"amount"`
 }
 
 type Role struct {

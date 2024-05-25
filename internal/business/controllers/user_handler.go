@@ -3,7 +3,7 @@ package controllers
 import (
 	"backbu/internal/data"
 	"backbu/pkg/auth"
-	"backbu/pkg/database"
+	db "backbu/pkg/database"
 	"time"
 
 	"encoding/json"
@@ -71,6 +71,7 @@ func Login(c *gin.Context){
 
 	/* obtenemos el Usuario dado el mail */
 	usuario, err := db.Get[data.User]("users", bson.M{"email": loggedUser.Email})
+
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, data.JsonError{Message: err.Error()})
 		return
@@ -262,3 +263,79 @@ func DeleteUser(c *gin.Context) {
 	c.IndentedJSON(http.StatusAccepted, result)
 }
 
+/* Actualiza la wishlist de un usuario */
+func UpdateWishlist(c *gin.Context){
+  // El ID debe ser de tipo ObjectID
+  objectId, err := primitive.ObjectIDFromHex(c.Param("id"))
+  if err != nil{
+    	c.IndentedJSON(http.StatusBadRequest, data.JsonError{Message: err.Error()})
+  }
+
+  usuario, err := db.Get[data.User]("users", bson.M{"_id": objectId})
+  if err != nil {
+    c.IndentedJSON(http.StatusNotFound, data.JsonError{Message: err.Error()})
+    return
+  }
+
+  /* Se decodifica el body de la petición en un tipo "User" */
+  var wishlist []string;
+  err = json.NewDecoder(c.Request.Body).Decode(&wishlist)
+  if err != nil {
+    c.IndentedJSON(http.StatusBadRequest, data.JsonError{Message: err.Error()})
+  }
+  
+  /* Convertimos la wishlist a un array de ObjectID */
+  var objectID_wishlist []primitive.ObjectID
+  for _, id := range wishlist {
+    objectId, err := primitive.ObjectIDFromHex(id)
+    if err != nil {
+      c.IndentedJSON(http.StatusBadRequest, data.JsonError{Message: err.Error()})
+      return
+    }
+    objectID_wishlist = append(objectID_wishlist, objectId)
+  }
+
+  usuario.Wishlist = objectID_wishlist
+
+  /* Se añade el producto a la wishlist */
+  result, err := db.Update("users", bson.M{"_id": objectId}, usuario)
+  if (err != nil) {
+    c.IndentedJSON(http.StatusInternalServerError, data.JsonError{Message: err.Error()})
+    return
+  }
+  
+  c.IndentedJSON(http.StatusOK, result)
+}
+
+/* Actualiza el carrito de un usuario */
+func UpdateCart(c *gin.Context){
+  // El ID debe ser de tipo ObjectID
+  objectId, err := primitive.ObjectIDFromHex(c.Param("id"))
+  if err != nil{
+    	c.IndentedJSON(http.StatusBadRequest, data.JsonError{Message: err.Error()})
+  }
+
+  usuario, err := db.Get[data.User]("users", bson.M{"_id": objectId})
+  if err != nil {
+    c.IndentedJSON(http.StatusNotFound, data.JsonError{Message: err.Error()})
+    return
+  }
+
+  /* Se decodifica el body de la petición en un tipo "User" */
+  var cart []data.CartItem;
+  err = json.NewDecoder(c.Request.Body).Decode(&cart)
+  if err != nil {
+    c.IndentedJSON(http.StatusBadRequest, data.JsonError{Message: err.Error()})
+  }
+
+  usuario.Cart = cart
+
+  /* Se añade el producto al carrito */
+  result, err := db.Update("users", bson.M{"_id": objectId}, usuario)
+  if (err != nil) {
+    c.IndentedJSON(http.StatusInternalServerError, data.JsonError{Message: err.Error()})
+    return
+  }
+  
+  c.IndentedJSON(http.StatusOK, result)
+}
