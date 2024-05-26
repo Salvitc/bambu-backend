@@ -4,11 +4,14 @@ import (
 	"backbu/internal/data"
 	"backbu/pkg/database"
 	"log"
+	"time"
 
 	"encoding/json"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gofor-little/env"
+	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -90,13 +93,19 @@ func GetAllUserOrders(c *gin.Context){
 	}
 
 	/* obtiene todos los Pedidos que pertenezcan al usuario */
-	result, err := db.Get[data.Order]("orders", bson.M{"user_id": userId})
+  result, err := db.GetBy[data.Order]("orders", bson.M{"user_id": userId})
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, data.JsonError{Message: err.Error()})
 		return
 	}
+  
+  extendedOrders, err := buildExtendedOrders(result)
+  if err != nil {
+    c.IndentedJSON(http.StatusNotFound, data.JsonError{Message: err.Error()})
+    return
+  }
 
-	c.IndentedJSON(http.StatusOK, result)	
+	c.IndentedJSON(http.StatusOK, extendedOrders)	
 }
 
 /* Crear un Pedido en la base de datos */
@@ -185,8 +194,8 @@ func buildExtendedOrders(orders []*data.Order) ([]data.ExtendedOrder, error) {
     }
 
     var products []data.Product
-    for _, product := range order.Products {
-      p, err := db.Get[data.Product]("products", bson.M{"_id": product})
+    for _, product := range order.Items {
+      p, err := db.Get[data.Product]("products", bson.M{"_id": product.ProductID})
       if err != nil {
         return nil, err
       }
@@ -202,4 +211,79 @@ func buildExtendedOrders(orders []*data.Order) ([]data.ExtendedOrder, error) {
     })
   } 
   return extendedOrders, nil
+}
+
+func DumpCartToOrder(c *gin.Context) {
+ /* Obtenemos la secret key de las variables de entorno */
+  secret, err := env.MustGet("SECRET_KEY"); if err != nil {
+    c.AbortWithStatus(http.StatusInternalServerError)
+    return
+  }
+
+  /* Obtenemos el token de la cookie */
+  tokenString, err := c.Cookie("Authorization")
+  if err != nil {
+    c.AbortWithStatus(http.StatusUnauthorized)
+    return
+  }
+
+  /* Parseamos el token */
+  token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+    return []byte(secret), nil
+  })
+  if err != nil {
+    c.AbortWithStatus(http.StatusUnauthorized)
+    return
+  }
+
+  /* Obtenemos el ID del usuario */
+  claims, ok := token.Claims.(jwt.MapClaims)
+  if !ok {
+    c.AbortWithStatus(http.StatusUnauthorized)
+    return
+  }
+
+	// El ID debe ser de tipo ObjectID
+	objectId, err := primitive.ObjectIDFromHex(claims["sub"].(string))
+	if err != nil{
+    	c.IndentedJSON(http.StatusBadRequest, data.JsonError{Message: err.Error()})
+	}
+
+  /* Obtenemos el usuario dado el ID */
+  usuario, err := db.Get[data.User]("users", bson.M{"_id": objectId})
+  if err != nil {
+    c.IndentedJSON(http.StatusNotFound, data.JsonError{Message: err.Error()})
+    return
+  }
+
+  /* Insertamos su carrito como un pedido */
+  var order data.Order
+  order.UserID = usuario.ID
+  for _, item := range usuario.Cart {
+    var orderItem data.OrderItem
+    orderItem.ProductID = item.ProductID
+    orderItem.Amount = item.Amount
+
+    order.Items = append(order.Items, orderItem)
+    order.Amount += item.Price * float32(item.Amount)
+  }
+  order.Amount += order.Amount * 0.21 // IVA
+  order.Amount += 5.99 // Gastos de envío
+  order.Date = primitive.DateTime(time.Now().UnixNano() / int64(time.Millisecond))
+
+  result, err := db.Create("orders", order)
+  if err != nil {
+    c.IndentedJSON(http.StatusInternalServerError, data.JsonError{Message: err.Error()})
+    return
+  }
+
+  /* Limpiamos el carrito */
+  usuario.Cart = nil
+  _, err = db.Update("users", bson.M{"_id": usuario.ID}, usuario)
+  if err != nil {
+    c.IndentedJSON(http.StatusInternalServerError, data.JsonError{Message: err.Error()})
+    return
+  }
+
+  c.IndentedJSON(http.StatusOK, result)
 }

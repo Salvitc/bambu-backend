@@ -37,16 +37,21 @@ type CartItem struct {
 }
 
 type Role struct {
-	Code string `json:"code" bson:"code"`
+	Code      string              `json:"code" bson:"code"`
 }
 
 type Order struct {
-	ID       primitive.ObjectID   `json:"_id,omitempty" bson:"_id,omitempty"`
-  OrderID  int32                `json:"order_id" bson:"order_id"`
-  Date     primitive.DateTime   `json:"date" bson:"date"`
-	UserID   primitive.ObjectID   `json:"user_id" bson:"user_id"`
-	Products []primitive.ObjectID `json:"products" bson:"products"`
-	Amount   float32              `json:"amount" bson:"amount"`
+	ID        primitive.ObjectID   `json:"_id,omitempty" bson:"_id,omitempty"`
+  OrderID   int32                `json:"order_id" bson:"order_id"`
+  Date      primitive.DateTime   `json:"date" bson:"date"`
+	UserID    primitive.ObjectID   `json:"user_id" bson:"user_id"`
+	Items     []OrderItem          `json:"products" bson:"products"`
+	Amount    float32              `json:"amount" bson:"amount"`
+}
+
+type OrderItem struct {
+  ProductID primitive.ObjectID  `json:"product_id" bson:"product_id"`
+  Amount    uint8               `json:"amount" bson:"amount"`
 }
 
 type Review struct {

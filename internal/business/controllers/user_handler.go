@@ -315,7 +315,7 @@ func UpdateCart(c *gin.Context){
     	c.IndentedJSON(http.StatusBadRequest, data.JsonError{Message: err.Error()})
   }
 
-  usuario, err := db.Get[data.User]("users", bson.M{"_id": objectId})
+  _, err = db.Get[data.User]("users", bson.M{"_id": objectId})
   if err != nil {
     c.IndentedJSON(http.StatusNotFound, data.JsonError{Message: err.Error()})
     return
@@ -328,14 +328,12 @@ func UpdateCart(c *gin.Context){
     c.IndentedJSON(http.StatusBadRequest, data.JsonError{Message: err.Error()})
   }
 
-  usuario.Cart = cart
-
   /* Se añade el producto al carrito */
-  result, err := db.Update("users", bson.M{"_id": objectId}, usuario)
+  _, err = db.Update("users", bson.M{"_id": objectId}, bson.M{"cart": cart})
   if (err != nil) {
     c.IndentedJSON(http.StatusInternalServerError, data.JsonError{Message: err.Error()})
     return
   }
   
-  c.IndentedJSON(http.StatusOK, result)
+  c.IndentedJSON(http.StatusOK, cart)
 }
