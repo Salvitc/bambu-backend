@@ -15,17 +15,19 @@ import (
 )
 
 /* Encapsula la obtención y gestión de errores del cliente mongo */
-func GetClient() (*mongo.Database) {
-	mongoDb, err := connect(); if err != nil {
+func GetClient() *mongo.Database {
+	mongoDb, err := connect()
+	if err != nil {
 		log.Fatalf("Error connecting to database: %v", err)
 	}
 
-	return mongoDb;
+	return mongoDb
 }
+
 /****************************************************************/
 
 /* Recibe uno o más campos de un elemento y lo busca en base de datos */
-func Get[T any](collection string, filter bson.M) (*T, error){
+func Get[T any](collection string, filter bson.M) (*T, error) {
 	result := GetClient().Collection(collection).FindOne(context.Background(), filter)
 
 	var data *T
@@ -37,9 +39,9 @@ func Get[T any](collection string, filter bson.M) (*T, error){
 }
 
 /* Dada una colección, obtiene todos los elementos existentes */
-func GetAll[T any](collection string) ([] *T, error){
+func GetAll[T any](collection string) ([]*T, error) {
 	/* Obtiene un objeto mongo Cursor con la información de las entidades */
-	cursor, err:= GetClient().Collection(collection).Find(context.Background(), bson.M{})
+	cursor, err := GetClient().Collection(collection).Find(context.Background(), bson.M{})
 	if err != nil {
 		return nil, err
 	}
@@ -51,11 +53,11 @@ func GetAll[T any](collection string) ([] *T, error){
 	return data, err
 }
 
-func GetBy[T any](collection string, filter bson.M) ([] *T, error){
-  /* Obtiene un objeto mongo Cursor con la información de las entidades */
-  cursor, err:= GetClient().Collection(collection).Find(context.Background(), filter)
-  if err != nil {
-  
+func GetBy[T any](collection string, filter bson.M) ([]*T, error) {
+	/* Obtiene un objeto mongo Cursor con la información de las entidades */
+	cursor, err := GetClient().Collection(collection).Find(context.Background(), filter)
+	if err != nil {
+
 		return nil, err
 	}
 
@@ -72,9 +74,18 @@ func Create[T any](collection string, data T) (*mongo.InsertOneResult, error) {
 }
 
 /* Recibe un ID y actualiza la entidad con los datos seleccionados */
-func Update[T any](collection string, filter bson.M, data T) (*mongo.UpdateResult, error){
+func Update[T any](collection string, filter bson.M, data T) (*mongo.UpdateResult, error) {
 	result, err := GetClient().Collection(collection).UpdateOne(context.Background(), filter, bson.M{"$set": data})
-	if(err != nil){
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func Replace[T any](collection string, filter bson.M, data T) (*mongo.UpdateResult, error) {
+	result, err := GetClient().Collection(collection).ReplaceOne(context.Background(), filter, data)
+	if err != nil {
 		return nil, err
 	}
 
@@ -89,5 +100,3 @@ func Delete(collection string, filter bson.M) (*mongo.DeleteResult, error) {
 
 	return result, nil
 }
-
-
