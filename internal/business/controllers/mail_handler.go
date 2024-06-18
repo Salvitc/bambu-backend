@@ -4,6 +4,7 @@ import (
 	"backbu/internal/data"
 	"backbu/pkg/mailing"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -18,6 +19,7 @@ func MailSender(c *gin.Context) {
 		return
 	}
 
+	fmt.Println(mensaje)
 	err = mailing.SendMail(mensaje)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, data.JsonError{Message: err.Error()})

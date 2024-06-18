@@ -1,6 +1,7 @@
 package mailing
 
 import (
+	"fmt"
 	"net/smtp"
 )
 
@@ -13,11 +14,11 @@ type Message struct {
 
 func SendMail(message Message) error {
 	from := "bambushop46@gmail.com"
-	pass := "Pelopo_23"
+	pass := "xcgi upyd qvym xmyc"
 	to := "bambushop46@gmail.com"
 
-	msg := "From: " + message.From + "\n" +
-		"Msg: " + message.Body
+	msg := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s",
+		message.From, message.To, message.Subject, message.Body)
 
 	err := smtp.SendMail("smtp.gmail.com:587",
 		smtp.PlainAuth("", from, pass, "smtp.gmail.com"),
