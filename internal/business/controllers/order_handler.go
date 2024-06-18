@@ -209,6 +209,7 @@ func buildExtendedOrders(orders []*data.Order) ([]data.ExtendedOrder, error) {
 			User:     *user,
 			Products: products,
 			Amount:   order.Amount,
+			Date:     order.Date,
 		})
 	}
 	return extendedOrders, nil
