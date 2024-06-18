@@ -12,6 +12,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 /* Encapsula la obtención y gestión de errores del cliente mongo */
@@ -99,4 +100,22 @@ func Delete(collection string, filter bson.M) (*mongo.DeleteResult, error) {
 	}
 
 	return result, nil
+}
+
+func CounterIncrement() (int, error) {
+	filter := bson.M{"_id": "orders"}
+	update := bson.M{"$inc": bson.M{"order_id": 1}}
+	options := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
+
+	var result struct {
+		OrderId int `bson:"order_id"`
+	}
+
+	collection := GetClient().Collection("counters")
+	err := collection.FindOneAndUpdate(context.TODO(), filter, update, options).Decode(&result)
+	if err != nil {
+		return 0, err
+	}
+
+	return result.OrderId, nil
 }

@@ -270,9 +270,16 @@ func DumpCartToOrder(c *gin.Context) {
 		order.Amount += item.Price * float32(item.Amount)
 	}
 
-	order.Amount += order.Amount * 0.21 // IVA
-	order.Amount += 5.99                // Gastos de envío
+	order.Amount += 5.99 // Gastos de envío
 	order.Date = primitive.DateTime(time.Now().UTC().UnixNano() / int64(time.Millisecond))
+
+	order_id, err := db.CounterIncrement()
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, data.JsonError{Message: err.Error()})
+		return
+	}
+
+	order.OrderID = int32(order_id)
 
 	result, err := db.Create("orders", order)
 	if err != nil {
